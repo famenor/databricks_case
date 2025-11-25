@@ -1,0 +1,19 @@
+name: cat_cie_10
+layers:
+  - layer: raw
+    write_mode: overwrite_partition
+    version: 1
+    description: Catalog of CIE codes as in the original source in delta format
+    owner: armando.n90@gmail.com
+    retention_policy: permanent
+    schema:
+      - column: cie_code
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'CIE Code'
+      - column: cie_name
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'CIE Name'
