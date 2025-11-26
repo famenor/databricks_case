@@ -6,36 +6,61 @@ from delta.tables import DeltaTable
 
 spark = SparkSession.getActiveSession()
 
+
+## THIS COMPONENT CONTAINS THE CODE MODULES FOR READS AND WRITES IN DATABASES
+
+#INTERFACE WITH METHODS THAT MUST BE DEFINED BY THE CONCRETE IMPLEMENTATIONS
 class InterfaceDatabaseGateway(ABC):
 
+    #COUNT THE TOTAL OF ROWS IN THE SPECIFIED TABLE
     @abstractmethod
+    def count(self, catalog_name: str, schema_name: str, table_name: str) -> int:
+        pass
+
+    #EXECUTE A SQL QUERY IN THE DATABASE
+    @abstractmethod  
     def execute_query(self, sql: str) -> list:
         pass
-    
+
+    #GET THE MAX INTEGER VALUE IN A COLUMN OF THE TABLE
+    @abstractmethod
+    def get_max_value(self, catalog_name: str, schema_name: str, table_name: str, column: str) -> int:
+        pass
+
+    #GET THE SURROGATE ID ASSOCIATED WITH A SET OF BASE VALUES
     @abstractmethod
     def get_surrogate_id(self, catalog_name: str, schema_name, table_name: str, 
                          base_values: dict, surrogate_column: str) -> int:
         pass
 
-    @abstractmethod
-    def get_max_value(self, catalog_name: str, schema_name: str, table_name: str, column: str) -> int:
-        pass
-
-    @abstractmethod
-    def merge_dataframe(self, dataframe: DataFrame, catalog_name: str, schema_name: str, 
-                        table_name: str, surrogate_column: str):
-        pass
-
+    #GET THE TABLE METADATA ASSOCIATED TO THE SPECIFIED TABLE
     @abstractmethod
     def get_table_metadata(self, catalog_name: str, schema_name: str, table_name: str) -> list:
         pass
 
+    #GET THE TABLE DETAIL METADATA ASSOCIATED TO THE TABLE
     @abstractmethod
     def get_table_detail_metadata(self, table_id: int) -> list:
         pass
 
+    #MERGE A DATAFRAME INTO AN EXISTENT TABLE
+    @abstractmethod
+    def merge_dataframe(self, dataframe: DataFrame, catalog_name: str, schema_name: str, 
+                        table_name: str, match_columns: list):
+        pass
+
+    #WRITE A DATAFRAME INTO A TABLE
+    @abstractmethod
+    def write_table(self, dataframe: DataFrame, catalog_name: str, schema_name: str, table_name: str, params: dict): 
+        pass
+
+
+#ABSTRACT CLASS WITH THE COMMON SQL METHODS IMPLEMENTED
 class AbstractSQLDatabaseGateway(InterfaceDatabaseGateway):
 
+    ## INTERNAL METHODS
+
+    #PARSE THE BASE VALUES FOR THE SURROGATE KEY ASSOCIATION
     def parse_base_values(self, base_values) -> dict:
 
         parsed_base_values = {}
@@ -51,7 +76,8 @@ class AbstractSQLDatabaseGateway(InterfaceDatabaseGateway):
             parsed_base_values[key] = str_value
         
         return parsed_base_values
-        
+
+    #GENERATE THE SQL STRING FOR THE SURROGATE KEY ASSOCIATION    
     def generate_conditions_string(self, parsed_base_values):
 
         conditions_string = []
@@ -62,6 +88,7 @@ class AbstractSQLDatabaseGateway(InterfaceDatabaseGateway):
         conditions_string = ' AND '.join(conditions_string)
         return conditions_string
     
+    #GENERATE THE SQL STRING FOR FETCHING THE SURROGATE KEY
     def generate_surrogate_fetch_query(self, catalog_name, schema_name, table_name, conditions_string, surrogate_column):
 
         sql = f"""SELECT {surrogate_column} AS identifier 
@@ -69,10 +96,26 @@ class AbstractSQLDatabaseGateway(InterfaceDatabaseGateway):
                   WHERE {conditions_string}"""
 
         return sql
+    
+
+    ## IMPLEMENTATIONS AND DELEGATIONS OF THE INTERFACE METHODS
+
+    def count(self, catalog_name: str, schema_name: str, table_name: str) -> int:
+        sql = f'SELECT COUNT(*) AS count FROM {catalog_name}.{schema_name}.{table_name}'
+        result = self.execute_query(sql)
+        return result[0]['count']
 
     @abstractmethod
     def execute_query(self, sql: str) -> list:
         pass
+
+    def get_max_value(self, catalog_name: str, schema_name: str, table_name: str, column: str): 
+
+        sql = f"""SELECT MAX({column}) AS max_value  
+                  FROM {catalog_name}.{schema_name}.{table_name}""" 
+
+        result = self.execute_query(sql)
+        return result[0]['max_value']
     
     def get_surrogate_id(self, catalog_name: str, schema_name: str, table_name: str, 
                          base_values: dict, surrogate_column: str) -> int:
@@ -93,20 +136,7 @@ class AbstractSQLDatabaseGateway(InterfaceDatabaseGateway):
 
         else:
             return None
-
-    def get_max_value(self, catalog_name: str, schema_name: str, table_name: str, column: str): 
-
-        sql = f"""SELECT MAX({column}) AS max_value  
-                  FROM {catalog_name}.{schema_name}.{table_name}""" 
-
-        result = self.execute_query(sql)
-        return result[0]['max_value']
     
-    @abstractmethod
-    def merge_dataframe(self, dataframe: DataFrame, catalog_name: str, schema_name: str, 
-                        table_name: str, surrogate_column: str):
-        pass
-
     def get_table_metadata(self, catalog_name: str, schema_name: str, table_name: str):
         
         sql = f"""SELECT t.*, s.schema_name
@@ -127,6 +157,16 @@ class AbstractSQLDatabaseGateway(InterfaceDatabaseGateway):
         result = self.execute_query(sql)
         return result
     
+    @abstractmethod
+    def merge_dataframe(self, dataframe: DataFrame, catalog_name: str, schema_name: str, 
+                        table_name: str, match_columns: []):
+        pass
+    
+    @abstractmethod
+    def write_table(self, dataframe: DataFrame, catalog_name: str, schema_name: str, table_name: str, params: dict): 
+        pass
+
+#CONCRETE IMPLEMENTATION FOR THE DELTA TABLES IN DATABRICKS DATABASE    
 class SparkSQLDatabaseGateway(AbstractSQLDatabaseGateway):
 
     def __init__(self):
@@ -136,11 +176,30 @@ class SparkSQLDatabaseGateway(AbstractSQLDatabaseGateway):
         return spark.sql(sql).collect()
     
     def merge_dataframe(self, dataframe: DataFrame, catalog_name: str, schema_name: str, 
-                        table_name: str, surrogate_column: str):
+                        table_name: str, match_columns: []):
         
+        match_string = []
+        for column in match_columns:
+            match_string.append(f'target.{column}=source.{column}')
+        
+        match_string = ' AND '.join(match_string)     
         delta_table = DeltaTable.forName(spark, f'{catalog_name}.{schema_name}.{table_name}')
     
-        delta_table.alias('target').merge(dataframe.alias('source'),
-            f'target.{surrogate_column}=source.{surrogate_column}'
+        delta_table.alias('target').merge(dataframe.alias('source'), match_string
         ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+
+    def write_table(self, dataframe: DataFrame, catalog_name: str, schema_name: str, table_name: str, params: dict): 
+
+        write_mode = params['write_mode']
+        
+        if write_mode == 'overwrite_partition':
+
+            #TO DO - ADD SUPPORT FOR NON DEFAULT PARTITION
+            batch_id = params['batch_id']
+            partition_column = 'metadata_batch_id'
+
+            dataframe.write.format('delta').mode('overwrite').option('replaceWhere', f"{partition_column} = '{batch_id}'").partitionBy(partition_column).saveAsTable(f'{catalog_name}.{schema_name}.{table_name}')
+
+        else:
+            raise Exception('Unsupported write mode: ' + str(write_mode))
           
