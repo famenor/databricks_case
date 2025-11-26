@@ -1,0 +1,99 @@
+name: claims
+layers:
+  - layer: raw
+    write_mode: overwrite_partition
+    version: 1
+    description: Claims made by the customers in delta format
+    owner: armando.n90@gmail.com
+    retention_policy: permanent
+    schema:
+      - column: SINIESTRO
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Business identifier of the claim'
+      - column: STATE
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'State where the claim was made'
+      - column: CIE10
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'CIE code of the related pathology'
+      - column: DIAGNOSIS
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Diagnosis associated with the CIE code'
+      - column: FECHA_OCURRIDO
+        data_type: string
+        is_nullable: True
+        is_partition: False
+        comment: 'Date when the claim occurred'
+      - column: FECHA_PAGO
+        data_type: string
+        is_nullable: True
+        is_partition: False
+        comment: 'Date when the payment was made'
+      - column: FECHA_PRIMERGASTO
+        data_type: string
+        is_nullable: True
+        is_partition: False
+        comment: 'Date when the first expense was made'
+      - column: OCURRIDO
+        data_type: string
+        is_nullable: True
+        is_partition: False
+        comment: 'Unknown quantity in Spain format'
+      - column: PAGOS
+        data_type: string
+        is_nullable: True
+        is_partition: False
+        comment: 'Amount paid in Spain format'
+      - column: COASEGURO
+        data_type: string
+        is_nullable: True
+        is_partition: False
+        comment: 'Consurance in Spain format'
+      - column: IVAREC
+        data_type: string
+        is_nullable: True
+        is_partition: False
+        comment: 'IVA in Spain format'
+      - column: DEDUCIBLE
+        data_type: string
+        is_nullable: True
+        is_partition: False
+        comment: 'Deductible in Spain format'
+      - column: CAUSA
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Reason of the claim'
+      - column: CVE_MES
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Year and month of the claim'
+      - column: MES_CONT
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Last day of the related month'
+      - column: TIPO_PAGO
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Type of payment'
+      - column: CLASF_PROV
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Provider'
+      - column: NumCertificado
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Certificate of the customer who made the claim'

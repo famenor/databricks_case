@@ -1,0 +1,50 @@
+name: certificates
+layers:
+  - layer: raw
+    write_mode: overwrite_partition
+    version: 1
+    description: Customer data and their certificate numbers in delta format
+    owner: armando.n90@gmail.com
+    retention_policy: permanent
+    schema:
+      - column: id
+        data_type: integer
+        is_nullable: False
+        is_partition: False
+        comment: 'Bussiness identifier of the customer'
+      - column: nombre
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Name of the customer'
+      - column: email
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Email of the customer'
+      - column: edad
+        data_type: integer
+        is_nullable: False
+        is_partition: False
+        comment: 'Age of the customer'
+      - column: fecha_nacimiento
+        data_type: timestamp
+        is_nullable: False
+        is_partition: False
+        comment: 'Date of birth of the customer'
+      - column: ciudad
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: City where the customer lives'
+      - column: numero_certificado
+        data_type: integer
+        is_nullable: False
+        is_partition: False
+        comment: 'Certificate number of the customer'
+      - column: sexo
+        data_type: string
+        is_nullable: False
+        is_partition: False
+        comment: 'Gender of the customer'
+

@@ -1,0 +1,39 @@
+name: consultas
+layers:
+  - layer: raw
+    write_mode: overwrite_partition
+    version: 1
+    description: Medical consultations details in delta format
+    owner: armando.n90@gmail.com
+    retention_policy: permanent
+    schema:
+      - column: id
+        data_type: integer
+        is_nullable: False
+        is_partition: False
+        comment: 'Business identifier of the consultation'
+      - column: certificate_number
+        data_type: integer
+        is_nullable: False
+        is_partition: False
+        comment: 'Certificate number of the consultation'
+      - column: fecha_consulta
+        data_type: timestamp
+        is_nullable: False
+        is_partition: False
+        comment: 'Date of the consultation'
+      - column: closure
+        data_type: json
+        is_nullable: True
+        is_partition: False
+        comment: 'Details of the consultation'
+      - column: specialty
+        data_type: string
+        is_nullable: True
+        is_partition: False
+        comment: 'Specualty of the consultation'
+      - column: placed_by
+        data_type: integer
+        is_nullable: True
+        is_partition: False
+        comment: 'Identifier of the personal who captured the record'
