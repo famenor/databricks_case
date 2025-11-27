@@ -1,103 +1,103 @@
 name: certificates
 layers:
-  - layer: raw
+  raw:
     write_mode: overwrite_partition
     version: 1
     description: Customer data and their certificate numbers in delta format
     owner: armando.n90@gmail.com
     retention_policy: permanent
     schema:
-      - column: id
+      id:
         data_type: integer
         is_nullable: False
         is_partition: False
         comment: 'Bussiness identifier of the customer'
-      - column: nombre
+      nombre:
         data_type: string
         is_nullable: False
         is_partition: False
+        is_pii: True
         comment: 'Name of the customer'
-      - column: email
+      email:
         data_type: string
         is_nullable: False
         is_partition: False
+        is_pii: True
         comment: 'Email of the customer'
-      - column: edad
+      edad:
         data_type: integer
         is_nullable: False
         is_partition: False
         comment: 'Age of the customer'
-      - column: fecha_nacimiento
+      fecha_nacimiento:
         data_type: timestamp
         is_nullable: False
         is_partition: False
         comment: 'Date of birth of the customer'
-      - column: ciudad
+      ciudad:
         data_type: string
         is_nullable: False
         is_partition: False
         comment: City where the customer lives'
-      - column: numero_certificado
+      numero_certificado:
         data_type: integer
         is_nullable: False
         is_partition: False
         comment: 'Certificate number of the customer'
-      - column: sexo
+      sexo:
         data_type: string
         is_nullable: False
         is_partition: False
         comment: 'Gender of the customer'
-- layer: audit
+  audit:
     write_mode: merge_snapshot
     version: 1
     description: Customer data and their certificate numbers audited and consolidated in delta format
     owner: armando.n90@gmail.com
     retention_policy: permanent
     schema:
-      - column: certificate_id
-        raw_column: id
+      certificate_id:
+        rename_from: id
         validations:
           - validation: is_not_null
           - validation: is_unique
             unique_group: 1
-      - column: name
-        raw_column: nombre
+      name:
+        rename_from: nombre
         data_type: string
-        is_pii: True
         validations:
           - validation: is_not_null
-      - column: email
+      email:
         data_type: string
-        is_pii: True
         validations:
           - validation: is_not_null
-      - column: age
-        raw_column: edad
+      age:
+        rename_from: edad
         data_type: integer
         validations:
           - validation: is_not_null
           - validation: is_in_bounds
             min_allowed: 0
             max_allowed: 100
-      - birth_date
-        raw_column: fecha_nacimiento
+      birth_date:
+        rename_from: fecha_nacimiento
         validations:
           - validation: is_not_null
           - validation: is_in_bounds
             min_allowed: '1925-01-01'
             max_allowed: '2024-12-31'
-      - column: city
-        raw_column: ciudad
+      city:
+        rename_from: ciudad
         validations:
           - validation: is_not_null
-      - column: certificate_number
-        raw_column: numero_certificado
+      certificate_number:
+        rename_from: numero_certificado
         validations:
           - validation: is_not_null
           - validation: is_unique
             unique_group: 2
-      - column: gender
-        raw_column: sexo
+      gender:
+        rename_from: sexo
         validations:
           - validation: is_not_null
           - validation: is_in_list

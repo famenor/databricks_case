@@ -1,35 +1,35 @@
 name: cat_cie_10
 layers:
-  - layer: raw
+  raw:
     write_mode: overwrite_partition
     version: 1
     description: Catalog of CIE codes as in the original source in delta format
     owner: armando.n90@gmail.com
     retention_policy: permanent
     schema:
-      - column: cie_code
+      cie_code:
         data_type: string
         is_nullable: False
         is_partition: False
         comment: 'CIE Code'
-      - column: cie_name
+      cie_name:
         data_type: string
         is_nullable: False
         is_partition: False
         comment: 'CIE Name'
-  - layer: audit
+  audit:
     write_mode: merge_snapshot
     version: 1
     description: Catalog of CIE codes audited and consolidated in delta format
     owner: armando.n90@gmail.com
     retention_policy: permanent
     schema:
-      - column: cie_id
-        raw_column: cie_code
+      cie_id:
+        rename_from: cie_code
         validations:
           - validation: not_null
           - validation: unique
             unique_group: 1
-      - column: cie_name
+      cie_name:
         validations:
           - validation: not_null
