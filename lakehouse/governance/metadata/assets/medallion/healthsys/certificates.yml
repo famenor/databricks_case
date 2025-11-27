@@ -47,4 +47,58 @@ layers:
         is_nullable: False
         is_partition: False
         comment: 'Gender of the customer'
-
+- layer: audit
+    write_mode: merge_snapshot
+    version: 1
+    description: Customer data and their certificate numbers audited and consolidated in delta format
+    owner: armando.n90@gmail.com
+    retention_policy: permanent
+    schema:
+      - column: certificate_id
+        raw_column: id
+        validations:
+          - validation: is_not_null
+          - validation: is_unique
+            unique_group: 1
+      - column: name
+        raw_column: nombre
+        data_type: string
+        is_pii: True
+        validations:
+          - validation: is_not_null
+      - column: email
+        data_type: string
+        is_pii: True
+        validations:
+          - validation: is_not_null
+      - column: age
+        raw_column: edad
+        data_type: integer
+        validations:
+          - validation: is_not_null
+          - validation: is_in_bounds
+            min_allowed: 0
+            max_allowed: 100
+      - birth_date
+        raw_column: fecha_nacimiento
+        validations:
+          - validation: is_not_null
+          - validation: is_in_bounds
+            min_allowed: '1925-01-01'
+            max_allowed: '2024-12-31'
+      - column: city
+        raw_column: ciudad
+        validations:
+          - validation: is_not_null
+      - column: certificate_number
+        raw_column: numero_certificado
+        validations:
+          - validation: is_not_null
+          - validation: is_unique
+            unique_group: 2
+      - column: gender
+        raw_column: sexo
+        validations:
+          - validation: is_not_null
+          - validation: is_in_list
+            allowed: 'M,F'

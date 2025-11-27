@@ -97,3 +97,144 @@ layers:
         is_nullable: False
         is_partition: False
         comment: 'Certificate of the customer who made the claim'
+  - layer: audit
+    write_mode: merge_incremental
+    version: 1
+    description: Claims made by the customers audited and consolidated in delta format
+    owner: armando.n90@gmail.com
+    retention_policy: permanent
+    schema:
+      - column: claim_id
+        raw_column: SINIESTRO
+        validations:
+          - validation: is_not_null
+          - validation: unique
+            unique_group: 1
+      - column: state
+        raw_column: STATE
+        validations:
+          - validation: is_not_null
+      - column: cie_id
+        raw_column: CIE10
+        validations:
+          - validation: is_not_null
+          - validation: is_in_list
+            reference: cie_id
+            table: audit_cat_cie_10
+            schema: bronze_healthsys
+      - column: diagnosis
+        raw_column: DIAGNOSIS 
+        validations:
+          - validation: is_not_null
+      - column: incident_date
+        raw_column: FECHA_OCURRIDO
+        data_type: timestamp
+        validations:
+          - validation: is_not_null
+          - validation: is_date_format
+            format: '%d/%m/%Y'
+          - validation: is_in_bounds
+            min_allowed: '2020-01-01'
+            max_allowed: '2030-12-31'
+      - column: payment_date
+        raw_column: FECHA_PAGO
+        data_type: timestamp
+        validations:
+          - validation: is_date_format
+            format: '%d/%m/%Y'
+          - validation: is_in_bounds
+            min_allowed: '2020-01-01'
+            max_allowed: '2030-12-31'
+          - validation: is_not_lower_than
+            reference: first_expense_date
+      - column: first_expense_date
+        raw_column: FECHA_PRIMERGASTO
+        data_type: timestamp
+        validations:
+          - validation: is_date_format
+            format: '%d/%m/%Y'
+          - validation: is_in_bounds
+            min_allowed: '2020-01-01'
+            max_allowed: '2030-12-31'
+          - validation: is_not_lower_than
+            reference: incident_date
+      - column: ocurrido
+        raw_column: OCURRIDO
+        data_type: float
+        validations:
+          - validation: is_in_bounds
+            min_allowed: -1000000
+            max_allowed: 10000000
+      - column: payments
+        raw_column: PAGOS
+        data_type: float
+        validations:
+          - validation: is_not_null
+          - validation: is_in_bounds
+            min_allowed: 0
+            max_allowed: 10000000
+      - column: coinsuranse
+        raw_column: COASEGURO
+        data_type: float
+        validations:
+          - validation: is_not_null
+          - validation: is_in_bounds
+            min_allowed: 0
+            max_allowed: 10000000
+      - column: ivarec
+        raw_column: IVAREC
+        data_type: float
+        validations:
+          - validation: is_not_null
+          - validation: is_in_bounds
+            min_allowed: 0
+            max_allowed: 10000000
+      - column: deductible
+        raw_column: DEDUCIBLE
+        data_type: float
+        validations:
+          - validation: is_not_null
+          - validation: is_in_bounds
+            min_allowed: 0
+            max_allowed: 10000000
+      - column: incident_reason
+        raw_column: CAUSA 
+        validations:
+          - validation: is_not_null
+          - validation: is_in_list
+            allowed: 'Enfermedad,Accidente'
+      - column: cve_mes
+        raw_column: CVE_MES
+        validations:
+          - validation: is_not_null
+      - column: month_cont_date
+        raw_column: MES_CONT
+        data_type: timestamp
+        validations:
+          - validation: is_not_null
+          - validation: is_date_format
+            format: '%d/%m/%Y'
+          - validation: is_in_bounds
+            min_allowed: '2020-01-01'
+            max_allowed: '2030-12-31'
+          - validation: is_not_lower_than
+            reference: payment_date
+      - column: payment_type
+        raw_column: TIPO_PAGO
+        validations:
+          - validation: is_not_null
+          - validation: is_in_list
+            allowed: 'Pago Directo'
+      - column: provider
+        raw_column: CLASF_PROV 
+        validations:
+          - validation: is_not_null
+      - column: certificate_number
+        raw_column: NumCertificado
+        data_type: integer
+        validations:
+          - validation: is_not_null
+          - validation: is_in_list
+            reference: certificate_id
+            table: audit_certificates
+            schema: bronze_healthsys
