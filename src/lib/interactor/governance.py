@@ -86,8 +86,11 @@ class GovernanceInteractor:
                 continue
 
             metadata['field_data'][row['column_name']] = {'data_type': row['data_type'], 
+                                                          'rename_from': row['rename_from'],
                                                           'is_nullable': row['is_nullable'], 
                                                           'is_partition': row['is_partition'], 
+                                                          'is_pii': row['is_pii'], 
+                                                          'validations': row['validations'],
                                                           'comment': row['comment']}
             
         return metadata

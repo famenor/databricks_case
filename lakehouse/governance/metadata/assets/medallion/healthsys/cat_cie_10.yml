@@ -27,9 +27,9 @@ layers:
       cie_id:
         rename_from: cie_code
         validations:
-          - validation: not_null
+          - validation: is_not_null
           - validation: unique
             unique_group: 1
       cie_name:
         validations:
-          - validation: not_null
+          - validation: is_not_null

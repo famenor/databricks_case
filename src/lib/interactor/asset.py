@@ -8,7 +8,7 @@ from lib.gateway.database import InterfaceDatabaseGateway
 ## THIS COMPONENT CONTAINS THE CODE MODULES FOR INTERACTORS WITH ASSETS
 
 #INTERFACE WITH METHODS THAT MUST BE DEFINED BY THE CONCRETE IMPLEMENTATIONS 
-class InterfaceSurrogateKeyInteractor(ABC):
+class InterfaceAssetInteractor(ABC):
 
     @abstractmethod
     def merge_dataframe(self, dataframe: DataFrame, catalog_name: str, schema_name: str, 
@@ -20,12 +20,16 @@ class InterfaceSurrogateKeyInteractor(ABC):
         pass
 
     @abstractmethod
+    def read_table(self, catalog_name: str, schema_name: str, table_name: str, params: dict) -> DataFrame:
+        pass
+
+    @abstractmethod
     def write_table(self, dataframe: DataFrame, catalog_name: str, schema_name: str, table_name: str, params: dict):
         pass
     
 
 #USE CASES FOR ASSETS
-class AssetInteractor:
+class AssetInteractor(InterfaceAssetInteractor):
 
     def __init__(self, database_gateway: InterfaceDatabaseGateway):
         self.database_gateway = database_gateway  
@@ -44,6 +48,10 @@ class AssetInteractor:
         
         total_rows = self.database_gateway.count(catalog_name, schema_name, table_name)
         return total_rows
+    
+    #READ A TABLE IN THE DATABASE
+    def read_table(self, catalog_name: str, schema_name: str, table_name: str, params: dict) -> DataFrame:
+        return self.database_gateway.read_table(catalog_name, schema_name, table_name, params)
     
     #WRITE A TABLE IN THE DATABASE
     def write_table(self, dataframe: DataFrame, catalog_name: str, schema_name: str, table_name: str, params: dict):

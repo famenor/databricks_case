@@ -49,9 +49,44 @@ class InterfaceDatabaseGateway(ABC):
                         table_name: str, match_columns: list):
         pass
 
+    #READ A TABLE AS DATAFRAME
+    @abstractmethod
+    def read_table(self, catalog_name: str, schema_name: str, table_name: str, params: dict) -> DataFrame: 
+        pass
+
     #WRITE A DATAFRAME INTO A TABLE
     @abstractmethod
     def write_table(self, dataframe: DataFrame, catalog_name: str, schema_name: str, table_name: str, params: dict): 
+        pass
+
+
+#INTERFACE WITH METHODS FOR VALIDATIONS THAT MUST BE DEFINED BY THE CONCRETE IMPLEMENTATIONS
+class InterfaceDatabaseScreenValidationsGateway(ABC):
+
+    #VALIDATION SCREEN FOR IS NOT NULL
+    @abstractmethod
+    def get_is_not_null_failures(self, catalog_name: str, schema_name: str, table_name: str, column_name: str):
+        pass
+
+    @abstractmethod
+    def get_is_unique_failures(self, catalog_name: str, schema_name: str, table_name: str, column_names: list):
+        pass
+
+    @abstractmethod
+    def get_is_in_bounds_failures(self, catalog_name: str, schema_name: str, table_name: str, column_name: str, 
+                                  min_value: object, max_value: object, data_type: str):
+        pass
+
+    @abstractmethod
+    def get_is_in_list_failures(self, catalog_name: str, schema_name: str, table_name: str, column_name: str, list_values: list):
+        pass
+
+    @abstractmethod
+    def get_is_date_format_failures(self, catalog_name: str, schema_name: str, table_name: str, column_name: str, date_format: str):
+        pass
+
+    @abstractmethod
+    def get_is_not_lower_than_failures(self, catalog_name: str, schema_name: str, table_name: str, column_name: str, reference_column_name: str):
         pass
 
 
@@ -161,6 +196,10 @@ class AbstractSQLDatabaseGateway(InterfaceDatabaseGateway):
     def merge_dataframe(self, dataframe: DataFrame, catalog_name: str, schema_name: str, 
                         table_name: str, match_columns: []):
         pass
+
+    @abstractmethod
+    def read_table(self, catalog_name: str, schema_name: str, table_name: str, params: dict) -> DataFrame: 
+        pass
     
     @abstractmethod
     def write_table(self, dataframe: DataFrame, catalog_name: str, schema_name: str, table_name: str, params: dict): 
@@ -187,6 +226,24 @@ class SparkSQLDatabaseGateway(AbstractSQLDatabaseGateway):
     
         delta_table.alias('target').merge(dataframe.alias('source'), match_string
         ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+
+    def read_table(self, catalog_name: str, schema_name: str, table_name: str, params: dict) -> DataFrame:
+
+        read_mode = params['read_mode']
+        dataframe = None
+
+        if read_mode == 'read_all':
+            dataframe = spark.read.table(f'{catalog_name}.{schema_name}.{table_name}')
+
+        elif read_mode == 'read_partition':
+            batch_id = params['batch_id']
+            partition_column = 'metadata_batch_id'
+            dataframe = spark.read.table(f'{catalog_name}.{schema_name}.{table_name}').filter(f"{partition_column} = '{batch_id}'")
+        
+        else:
+            raise Exception('Unsupported read mode: ' + str(read_mode))
+
+        return dataframe
 
     def write_table(self, dataframe: DataFrame, catalog_name: str, schema_name: str, table_name: str, params: dict): 
 
